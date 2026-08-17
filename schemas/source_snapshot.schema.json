@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Liminal Source Snapshot",
+  "type": "object",
+  "required": ["source_url", "observed_at", "content_hash", "semantic_hash", "source_type"],
+  "properties": {
+    "source_url": {"type": "string", "format": "uri"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "published_at": {"type": ["string", "null"], "format": "date-time"},
+    "title": {"type": ["string", "null"]},
+    "content_hash": {"type": "string", "minLength": 16},
+    "semantic_hash": {"type": "string", "minLength": 16},
+    "source_type": {"type": "string"},
+    "status_code": {"type": ["integer", "null"]},
+    "content_type": {"type": ["string", "null"]},
+    "metadata": {"type": "object"}
+  }
+}

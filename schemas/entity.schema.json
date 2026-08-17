@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Liminal Entity",
+  "type": "object",
+  "required": ["entity_id", "canonical_name", "entity_type", "aliases", "attributes", "confidence"],
+  "properties": {
+    "entity_id": {"type": "string"},
+    "canonical_name": {"type": "string", "minLength": 1},
+    "entity_type": {"type": "string", "minLength": 1},
+    "aliases": {"type": "array", "items": {"type": "string"}},
+    "attributes": {"type": "object"},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+  }
+}
