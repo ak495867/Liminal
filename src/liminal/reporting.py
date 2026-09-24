@@ -29,13 +29,17 @@ def build_markdown_report(workspace: InvestigationWorkspace) -> str:
         "",
     ]
     for snapshot in sorted(workspace.snapshots, key=lambda item: item.observed_at):
-        lines.append(f"- `{snapshot.observed_at.isoformat()}` — [{snapshot.title or snapshot.source_url}]({snapshot.source_url}) — semantic hash `{snapshot.semantic_hash[:16]}`")
+        lines.append(
+            f"- `{snapshot.observed_at.isoformat()}` — [{snapshot.title or snapshot.source_url}]({snapshot.source_url}) — semantic hash `{snapshot.semantic_hash[:16]}`"
+        )
     if not workspace.snapshots:
         lines.append("No snapshots were ingested.")
     lines.extend(["", "## Semantic changes", ""])
     if workspace.diffs:
         for index, diff in enumerate(workspace.diffs, start=1):
-            lines.append(f"{index}. **{diff.summary}** Similarity `{diff.similarity:.3f}`. Classes: `{', '.join(diff.classifications) or 'none'}`.")
+            lines.append(
+                f"{index}. **{diff.summary}** Similarity `{diff.similarity:.3f}`. Classes: `{', '.join(diff.classifications) or 'none'}`."
+            )
             if diff.numeric_changes:
                 lines.append(f"   Numeric changes: `{', '.join(diff.numeric_changes)}`")
     else:
@@ -44,20 +48,50 @@ def build_markdown_report(workspace: InvestigationWorkspace) -> str:
     gaps = payload["archive_gaps"]
     if gaps:
         for gap in gaps:
-            lines.append(f"- `{gap['source_url']}` from `{gap['start']}` to `{gap['end']}` with at least `{gap['missing_observations']}` missing observations.")
+            lines.append(
+                f"- `{gap['source_url']}` from `{gap['start']}` to `{gap['end']}` with at least `{gap['missing_observations']}` missing observations."
+            )
     else:
-        lines.append("No archive gaps were detected under the current observation schedule.")
+        lines.append(
+            "No archive gaps were detected under the current observation schedule."
+        )
     graph = payload["graph"]
-    lines.extend(["", "## Evidence graph", "", f"- Nodes: `{len(graph['nodes'])}`", f"- Edges: `{len(graph['edges'])}`", ""])
-    lines.extend(["## Analyst note", "", payload["archival_relic"], "", "## Limitations", "", "Liminal records public observations. It does not establish intent, guilt, ownership, causality, or truth solely from repetition, deletion, timing, or association. Human review and primary-source verification remain required.", ""])
+    lines.extend(
+        [
+            "",
+            "## Evidence graph",
+            "",
+            f"- Nodes: `{len(graph['nodes'])}`",
+            f"- Edges: `{len(graph['edges'])}`",
+            "",
+        ]
+    )
+    lines.extend(
+        [
+            "## Analyst note",
+            "",
+            payload["archival_relic"],
+            "",
+            "## Limitations",
+            "",
+            "Liminal records public observations. It does not establish intent, guilt, ownership, causality, or truth solely from repetition, deletion, timing, or association. Human review and primary-source verification remain required.",
+            "",
+        ]
+    )
     return "\n".join(lines)
 
 
-def write_reports(workspace: InvestigationWorkspace, output_dir: str | Path) -> dict[str, Path]:
+def write_reports(
+    workspace: InvestigationWorkspace, output_dir: str | Path
+) -> dict[str, Path]:
     destination = Path(output_dir)
     destination.mkdir(parents=True, exist_ok=True)
     markdown_path = destination / "investigation.md"
     json_path = destination / "investigation.json"
     markdown_path.write_text(build_markdown_report(workspace), encoding="utf-8")
-    json_path.write_text(json.dumps(workspace.report_payload(), indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
+    json_path.write_text(
+        json.dumps(workspace.report_payload(), indent=2, sort_keys=True, default=str)
+        + "\n",
+        encoding="utf-8",
+    )
     return {"markdown": markdown_path, "json": json_path}

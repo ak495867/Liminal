@@ -28,12 +28,24 @@ class EvidenceGraph:
         self.edges[edge_id] = edge
 
     def neighbors(self, node_id: str, relation: str | None = None) -> list[str]:
-        return [edge.target_id for edge in self.edges.values() if edge.source_id == node_id and (relation is None or edge.relation == relation)]
+        return [
+            edge.target_id
+            for edge in self.edges.values()
+            if edge.source_id == node_id
+            and (relation is None or edge.relation == relation)
+        ]
 
     def incoming(self, node_id: str, relation: str | None = None) -> list[str]:
-        return [edge.source_id for edge in self.edges.values() if edge.target_id == node_id and (relation is None or edge.relation == relation)]
+        return [
+            edge.source_id
+            for edge in self.edges.values()
+            if edge.target_id == node_id
+            and (relation is None or edge.relation == relation)
+        ]
 
-    def propagation_depth(self, root_id: str, target_id: str, relation: str | None = None) -> int | None:
+    def propagation_depth(
+        self, root_id: str, target_id: str, relation: str | None = None
+    ) -> int | None:
         queue = deque([(root_id, 0)])
         visited = {root_id}
         while queue:
@@ -69,10 +81,17 @@ class EvidenceGraph:
         return len(self.root_origins(node_id))
 
     def to_dict(self) -> dict[str, Any]:
-        return {"nodes": self.nodes, "edges": {edge_id: asdict(edge) for edge_id, edge in self.edges.items()}}
+        return {
+            "nodes": self.nodes,
+            "edges": {edge_id: asdict(edge) for edge_id, edge in self.edges.items()},
+        }
 
     def to_json_ready(self) -> dict[str, Any]:
         payload = self.to_dict()
         for edge in payload["edges"].values():
-            edge["observed_at"] = edge["observed_at"].isoformat() if isinstance(edge["observed_at"], datetime) else edge["observed_at"]
+            edge["observed_at"] = (
+                edge["observed_at"].isoformat()
+                if isinstance(edge["observed_at"], datetime)
+                else edge["observed_at"]
+            )
         return payload

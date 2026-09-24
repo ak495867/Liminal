@@ -25,7 +25,9 @@ def _numbers(text: str) -> set[str]:
     return set(re.findall(r"(?<![A-Za-z])[-+]?\d+(?:[.,]\d+)?%?", text))
 
 
-def _classify(left: str, right: str, added: set[str], removed: set[str], numbers_changed: bool) -> tuple[str, ...]:
+def _classify(
+    left: str, right: str, added: set[str], removed: set[str], numbers_changed: bool
+) -> tuple[str, ...]:
     classes = []
     if numbers_changed:
         classes.append("quantitative")
@@ -47,13 +49,25 @@ def compare_text(left: str, right: str) -> SemanticDiff:
     added = set(right_tokens).difference(left_tokens)
     removed = set(left_tokens).difference(right_tokens)
     numeric_changes = _numbers(left).symmetric_difference(_numbers(right))
-    classifications = _classify(left_normalized, right_normalized, added, removed, bool(numeric_changes))
+    classifications = _classify(
+        left_normalized, right_normalized, added, removed, bool(numeric_changes)
+    )
     similarity = similarity_ratio(left, right)
     changed = left_normalized != right_normalized
     if not changed:
-        summary = "No semantic change detected. The page stayed in the same liminal state."
+        summary = (
+            "No semantic change detected. The page stayed in the same liminal state."
+        )
     elif matcher.ratio() > 0.98:
         summary = "Minor textual change detected."
     else:
         summary = "Material textual change detected across the evidence surface."
-    return SemanticDiff(changed, similarity, tuple(sorted(added)), tuple(sorted(removed)), tuple(sorted(numeric_changes)), classifications, summary)
+    return SemanticDiff(
+        changed,
+        similarity,
+        tuple(sorted(added)),
+        tuple(sorted(removed)),
+        tuple(sorted(numeric_changes)),
+        classifications,
+        summary,
+    )

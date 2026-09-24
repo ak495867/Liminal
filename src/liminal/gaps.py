@@ -16,7 +16,11 @@ class ArchiveGap:
     reason: str = "unobserved_interval"
 
 
-def detect_gaps(snapshots: Iterable[SourceSnapshot], expected_interval: timedelta = timedelta(days=1), tolerance: float = 1.5) -> list[ArchiveGap]:
+def detect_gaps(
+    snapshots: Iterable[SourceSnapshot],
+    expected_interval: timedelta = timedelta(days=1),
+    tolerance: float = 1.5,
+) -> list[ArchiveGap]:
     grouped: dict[str, list[SourceSnapshot]] = {}
     for snapshot in snapshots:
         snapshot.validate()
@@ -28,12 +32,20 @@ def detect_gaps(snapshots: Iterable[SourceSnapshot], expected_interval: timedelt
             elapsed = right.observed_at - left.observed_at
             threshold = expected_interval.total_seconds() * tolerance
             if elapsed.total_seconds() > threshold:
-                missing = max(int(elapsed.total_seconds() // expected_interval.total_seconds()) - 1, 1)
-                gaps.append(ArchiveGap(source_url, left.observed_at, right.observed_at, missing))
+                missing = max(
+                    int(elapsed.total_seconds() // expected_interval.total_seconds())
+                    - 1,
+                    1,
+                )
+                gaps.append(
+                    ArchiveGap(source_url, left.observed_at, right.observed_at, missing)
+                )
     return gaps
 
 
-def source_survival(snapshots: Iterable[SourceSnapshot]) -> dict[str, dict[str, object]]:
+def source_survival(
+    snapshots: Iterable[SourceSnapshot],
+) -> dict[str, dict[str, object]]:
     grouped: dict[str, list[SourceSnapshot]] = {}
     for snapshot in snapshots:
         grouped.setdefault(snapshot.source_url, []).append(snapshot)
@@ -42,5 +54,12 @@ def source_survival(snapshots: Iterable[SourceSnapshot]) -> dict[str, dict[str, 
         ordered = sorted(items, key=lambda item: item.observed_at)
         first = ordered[0].observed_at
         last = ordered[-1].observed_at
-        result[source_url] = {"first_seen": first.isoformat(), "last_seen": last.isoformat(), "observation_count": len(ordered), "active_days": max((last - first).days, 0), "semantic_versions": len({item.semantic_hash for item in ordered}), "content_versions": len({item.content_hash for item in ordered})}
+        result[source_url] = {
+            "first_seen": first.isoformat(),
+            "last_seen": last.isoformat(),
+            "observation_count": len(ordered),
+            "active_days": max((last - first).days, 0),
+            "semantic_versions": len({item.semantic_hash for item in ordered}),
+            "content_versions": len({item.content_hash for item in ordered}),
+        }
     return result

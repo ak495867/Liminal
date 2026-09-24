@@ -61,19 +61,36 @@ def _validate_public_url(url: str) -> None:
     if parsed.scheme not in {"http", "https"} or not parsed.hostname:
         raise ValueError("only public http and https URLs are supported")
     hostname = parsed.hostname.lower()
-    if hostname in {"localhost", "localhost.localdomain"} or hostname.endswith(".local"):
+    if hostname in {"localhost", "localhost.localdomain"} or hostname.endswith(
+        ".local"
+    ):
         raise ValueError("local hostnames are not supported")
     try:
         address = ipaddress.ip_address(hostname)
     except ValueError:
         return
-    if address.is_private or address.is_loopback or address.is_link_local or address.is_reserved:
-        raise ValueError("private, loopback, link-local, and reserved addresses are not supported")
+    if (
+        address.is_private
+        or address.is_loopback
+        or address.is_link_local
+        or address.is_reserved
+    ):
+        raise ValueError(
+            "private, loopback, link-local, and reserved addresses are not supported"
+        )
 
 
-def fetch_url(url: str, policy: FetchPolicy = FetchPolicy(), observed_at: datetime | None = None) -> SourceSnapshot:
+def fetch_url(
+    url: str, policy: FetchPolicy = FetchPolicy(), observed_at: datetime | None = None
+) -> SourceSnapshot:
     _validate_public_url(url)
-    request = Request(url, headers={"User-Agent": policy.user_agent, "Accept": "text/html, text/plain, application/xhtml+xml, application/xml;q=0.9"})
+    request = Request(
+        url,
+        headers={
+            "User-Agent": policy.user_agent,
+            "Accept": "text/html, text/plain, application/xhtml+xml, application/xml;q=0.9",
+        },
+    )
     with urlopen(request, timeout=policy.timeout_seconds) as response:
         body = response.read(policy.maximum_bytes + 1)
         if len(body) > policy.maximum_bytes:
@@ -86,6 +103,19 @@ def fetch_url(url: str, policy: FetchPolicy = FetchPolicy(), observed_at: dateti
     parser.feed(decoded)
     text = parser.text or decoded
     timestamp = observed_at or datetime.now(timezone.utc)
-    snapshot = SourceSnapshot(source_url=final_url, observed_at=timestamp, content=text, content_hash=content_hash(decoded), semantic_hash=semantic_hash(text), source_type="web", title=parser.title, status_code=status_code, content_type=content_type, first_seen_at=timestamp, last_seen_at=timestamp, metadata={"requested_url": url, "collector": "passive_web"})
+    snapshot = SourceSnapshot(
+        source_url=final_url,
+        observed_at=timestamp,
+        content=text,
+        content_hash=content_hash(decoded),
+        semantic_hash=semantic_hash(text),
+        source_type="web",
+        title=parser.title,
+        status_code=status_code,
+        content_type=content_type,
+        first_seen_at=timestamp,
+        last_seen_at=timestamp,
+        metadata={"requested_url": url, "collector": "passive_web"},
+    )
     snapshot.validate()
     return snapshot

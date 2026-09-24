@@ -20,9 +20,17 @@ def _parse_date(value: str | None) -> datetime | None:
         return None
 
 
-def fetch_rss(url: str, policy: FetchPolicy = FetchPolicy(), observed_at: datetime | None = None) -> list[SourceSnapshot]:
+def fetch_rss(
+    url: str, policy: FetchPolicy = FetchPolicy(), observed_at: datetime | None = None
+) -> list[SourceSnapshot]:
     _validate_public_url(url)
-    request = Request(url, headers={"User-Agent": policy.user_agent, "Accept": "application/rss+xml, application/atom+xml, application/xml;q=0.9"})
+    request = Request(
+        url,
+        headers={
+            "User-Agent": policy.user_agent,
+            "Accept": "application/rss+xml, application/atom+xml, application/xml;q=0.9",
+        },
+    )
     with urlopen(request, timeout=policy.timeout_seconds) as response:
         body = response.read(policy.maximum_bytes + 1)
     if len(body) > policy.maximum_bytes:
@@ -36,5 +44,19 @@ def fetch_rss(url: str, policy: FetchPolicy = FetchPolicy(), observed_at: dateti
         description = (item.findtext("description") or "").strip()
         published = _parse_date(item.findtext("pubDate"))
         content = " ".join(value for value in (title, description) if value)
-        snapshots.append(SourceSnapshot(source_url=link, observed_at=timestamp, published_at=published, content=content, content_hash=content_hash(content), semantic_hash=semantic_hash(content), source_type="rss", title=title or None, first_seen_at=timestamp, last_seen_at=timestamp, metadata={"feed_url": url, "collector": "passive_rss"}))
+        snapshots.append(
+            SourceSnapshot(
+                source_url=link,
+                observed_at=timestamp,
+                published_at=published,
+                content=content,
+                content_hash=content_hash(content),
+                semantic_hash=semantic_hash(content),
+                source_type="rss",
+                title=title or None,
+                first_seen_at=timestamp,
+                last_seen_at=timestamp,
+                metadata={"feed_url": url, "collector": "passive_rss"},
+            )
+        )
     return snapshots

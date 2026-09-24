@@ -15,25 +15,58 @@ from .storage import SnapshotStore
 
 
 def _demo_workspace() -> InvestigationWorkspace:
-    investigation = Investigation(investigation_id="demo_liminal", title="A Small Archaeology of a Changing Public Claim")
+    investigation = Investigation(
+        investigation_id="demo_liminal",
+        title="A Small Archaeology of a Changing Public Claim",
+    )
     workspace = InvestigationWorkspace(investigation)
     first_time = utc_now() - timedelta(days=3)
     second_time = utc_now() - timedelta(days=1)
     first_content = "Liminal Research announced a public archive project in 2024. The project preserves public evidence and records source changes."
     second_content = "Liminal Research announced a public archive project in 2025. The project preserves public evidence, records source changes, and publishes uncertainty notes."
-    for observed_at, content in ((first_time, first_content), (second_time, second_content)):
-        workspace.ingest_snapshot(SourceSnapshot(source_url="https://example.org/liminal", observed_at=observed_at, content=content, content_hash=content_hash(content), semantic_hash=semantic_hash(content), title="Liminal Research Archive", source_type="fixture", first_seen_at=first_time, last_seen_at=observed_at))
+    for observed_at, content in (
+        (first_time, first_content),
+        (second_time, second_content),
+    ):
+        workspace.ingest_snapshot(
+            SourceSnapshot(
+                source_url="https://example.org/liminal",
+                observed_at=observed_at,
+                content=content,
+                content_hash=content_hash(content),
+                semantic_hash=semantic_hash(content),
+                title="Liminal Research Archive",
+                source_type="fixture",
+                first_seen_at=first_time,
+                last_seen_at=observed_at,
+            )
+        )
     workspace.compare_latest("https://example.org/liminal")
     if len(workspace.claims) >= 2:
-        workspace.link_copy(workspace.claims[0].claim_id, workspace.claims[-1].claim_id, second_time, 0.7)
-    workspace.investigation.add_note("A copied claim walks into a graph and meets its original source.")
+        workspace.link_copy(
+            workspace.claims[0].claim_id,
+            workspace.claims[-1].claim_id,
+            second_time,
+            0.7,
+        )
+    workspace.investigation.add_note(
+        "A copied claim walks into a graph and meets its original source."
+    )
     return workspace
 
 
 def demo_main(args: argparse.Namespace) -> None:
     workspace = _demo_workspace()
     paths = write_reports(workspace, args.output)
-    print(json.dumps({"output": {name: str(path) for name, path in paths.items()}, "relic": "The web is not dead; it is merely in a different archive."}, indent=2))
+    print(
+        json.dumps(
+            {
+                "output": {name: str(path) for name, path in paths.items()},
+                "relic": "The web is not dead; it is merely in a different archive.",
+            },
+            indent=2,
+        )
+    )
 
 
 def diff_main(args: argparse.Namespace) -> None:
@@ -44,14 +77,38 @@ def diff_main(args: argparse.Namespace) -> None:
 
 def hash_main(args: argparse.Namespace) -> None:
     content = Path(args.path).read_text(encoding="utf-8")
-    print(json.dumps({"content_hash": content_hash(content), "semantic_hash": semantic_hash(content), "relic": "Temporal OSINT: because yesterday deserves a diff."}, indent=2))
+    print(
+        json.dumps(
+            {
+                "content_hash": content_hash(content),
+                "semantic_hash": semantic_hash(content),
+                "relic": "Temporal OSINT: because yesterday deserves a diff.",
+            },
+            indent=2,
+        )
+    )
 
 
 def collect_main(args: argparse.Namespace) -> None:
-    snapshot = fetch_url(args.url, FetchPolicy(timeout_seconds=args.timeout, maximum_bytes=args.maximum_bytes))
+    snapshot = fetch_url(
+        args.url,
+        FetchPolicy(timeout_seconds=args.timeout, maximum_bytes=args.maximum_bytes),
+    )
     with SnapshotStore(args.database) as store:
         row_id = store.save_snapshot(snapshot)
-    print(json.dumps({"snapshot_row_id": row_id, "source_url": snapshot.source_url, "observed_at": snapshot.observed_at.isoformat(), "content_hash": snapshot.content_hash, "semantic_hash": snapshot.semantic_hash, "relic": "The collector knocked politely; the archive answered with a hash."}, indent=2))
+    print(
+        json.dumps(
+            {
+                "snapshot_row_id": row_id,
+                "source_url": snapshot.source_url,
+                "observed_at": snapshot.observed_at.isoformat(),
+                "content_hash": snapshot.content_hash,
+                "semantic_hash": snapshot.semantic_hash,
+                "relic": "The collector knocked politely; the archive answered with a hash.",
+            },
+            indent=2,
+        )
+    )
 
 
 def main() -> None:

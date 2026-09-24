@@ -39,5 +39,7 @@ def similarity_ratio(left: str, right: str) -> float:
         left_counts[token] = left_counts.get(token, 0) + 1
     for token in right_tokens:
         right_counts[token] = right_counts.get(token, 0) + 1
-    overlap = sum(min(left_counts.get(token, 0), count) for token, count in right_counts.items())
+    overlap = sum(
+        min(left_counts.get(token, 0), count) for token, count in right_counts.items()
+    )
     return float(2.0 * overlap / (len(left_tokens) + len(right_tokens)))
